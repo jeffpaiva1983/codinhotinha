@@ -3,647 +3,825 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌟 Codinhotinha – Programação para Crianças</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<title>🌟 Codinhotinha</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════════════
+   ROOT & RESET
+══════════════════════════════════════════════ */
 :root {
-  --bg:#FFF9F0; --panel-l:#FFFDE7; --panel-r:#F0F8FF; --stage-bg:#E8F5E9;
-  --move:#FF6B6B; --look:#4ECDC4; --say:#d4aa00; --ctrl:#56CF81; --event:#9B6FE8;
-  --run:#56CF81; --stop:#FF6B6B; --reset:#90CAF9; --add:#FFB347;
+  --cat-trigger: #FFCC00;
+  --cat-motion:  #5CB8FF;
+  --cat-look:    #9B59B6;
+  --cat-sound:   #2ECC71;
+  --cat-control: #FF7F50;
+  --cat-end:     #E74C3C;
+  --cat-collide: #FF69B4;
+  --toolbar-h: 52px;
+  --bottom-h: 210px;
+  --char-panel-w: 80px;
+  --palette-w: 220px;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Nunito',sans-serif;background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; font-family: 'Fredoka One', cursive; }
 
-/* HEADER */
-header{background:linear-gradient(135deg,#FF6B6B,#FF8B94 45%,#FFE66D);padding:8px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 12px rgba(0,0,0,.15);flex-shrink:0;}
-header h1{font-family:'Fredoka One',cursive;font-size:1.8rem;color:#fff;text-shadow:2px 3px 0 rgba(0,0,0,.15);}
-.star{font-size:1.8rem;animation:spinStar 4s linear infinite;}
-@keyframes spinStar{to{transform:rotate(360deg);}}
-.subtitle{margin-left:auto;color:#fff;font-size:.85rem;font-weight:800;background:rgba(255,255,255,.25);border-radius:30px;padding:4px 14px;}
+/* ══════════════════════════════════════════════
+   TOP TOOLBAR
+══════════════════════════════════════════════ */
+#toolbar {
+  height: var(--toolbar-h);
+  background: linear-gradient(to bottom, #2d2d44, #1e1e32);
+  display: flex; align-items: center; padding: 0 12px; gap: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.5);
+  z-index: 10; position: relative;
+}
+#logo {
+  font-size: 1.4rem; color: #FFE66D;
+  text-shadow: 0 2px 8px rgba(255,230,109,.5);
+  letter-spacing: 1px; flex-shrink: 0;
+}
+.tbtn {
+  height: 36px; padding: 0 16px; border: none; border-radius: 20px;
+  font-family: 'Fredoka One', cursive; font-size: .95rem; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; color: #fff;
+  transition: transform .1s, filter .1s; box-shadow: 0 3px 0 rgba(0,0,0,.3);
+  flex-shrink: 0;
+}
+.tbtn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+#btn-run   { background: #27AE60; }
+#btn-run:hover { filter: brightness(1.15); }
+#btn-stop  { background: #C0392B; }
+#btn-reset { background: #2980B9; }
+.speed-grp { display:flex; align-items:center; gap:6px; color:#aaa; font-size:.8rem; margin-left:4px; }
+#speed { accent-color: #FFE66D; width: 70px; cursor: pointer; }
+.spacer { flex: 1; }
+#char-counter { color: #aaa; font-size: .8rem; font-family: 'Nunito', sans-serif; font-weight: 700; }
 
-/* LAYOUT */
-main{display:grid;grid-template-columns:200px 1fr 270px;flex:1;overflow:hidden;}
+/* ══════════════════════════════════════════════
+   MIDDLE = STAGE AREA
+══════════════════════════════════════════════ */
+#stage-area {
+  position: absolute;
+  top: var(--toolbar-h);
+  left: 0; right: 0;
+  bottom: var(--bottom-h);
+  display: flex;
+}
 
-/* PALETTE */
-#palette{background:var(--panel-l);border-right:3px solid #FFE0B2;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:5px;}
-#palette h2{font-family:'Fredoka One',cursive;font-size:.9rem;color:#bbb;text-align:center;margin-bottom:4px;}
-.cat{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ccc;margin-top:8px;padding-left:4px;}
-.block{border-radius:12px;padding:8px 11px;font-family:'Fredoka One',cursive;font-size:.88rem;color:#fff;cursor:grab;user-select:none;display:flex;align-items:center;gap:7px;box-shadow:0 3px 0 rgba(0,0,0,.18);transition:transform .12s,box-shadow .12s;border:none;width:100%;text-align:left;}
-.block:hover{transform:scale(1.07) rotate(-1.5deg);box-shadow:0 6px 0 rgba(0,0,0,.18);}
-.block:active{cursor:grabbing;}
-.block.move{background:var(--move);}
-.block.look{background:var(--look);}
-.block.say{background:var(--say);}
-.block.ctrl{background:var(--ctrl);}
-.block.event{background:var(--event);}
+/* Character list panel (left of stage) */
+#char-list-panel {
+  width: var(--char-panel-w);
+  background: #16213e;
+  border-right: 3px solid #0f3460;
+  display: flex; flex-direction: column;
+  align-items: center; padding: 8px 4px; gap: 6px;
+  overflow-y: auto;
+}
+.char-thumb {
+  width: 60px; height: 60px; border-radius: 16px;
+  background: #0f3460; border: 3px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; cursor: pointer; position: relative;
+  transition: border-color .15s, transform .15s;
+  flex-shrink: 0;
+}
+.char-thumb:hover { transform: scale(1.08); }
+.char-thumb.active { border-color: #FFE66D; background: #1a3a6e; }
+.char-thumb .th-del {
+  position: absolute; top: -5px; right: -5px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #E74C3C; color: #fff; border: none;
+  font-size: .65rem; cursor: pointer; display: none;
+  align-items: center; justify-content: center;
+}
+.char-thumb:hover .th-del { display: flex; }
 
-/* CENTER */
-#center{display:flex;flex-direction:column;background:#fff;}
-#controls{padding:8px 14px;background:#fff;display:flex;align-items:center;gap:8px;border-bottom:3px solid #E8F5E9;flex-shrink:0;}
-.ctrl-btn{font-family:'Fredoka One',cursive;font-size:1rem;padding:7px 16px;border:none;border-radius:50px;cursor:pointer;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.15);display:flex;align-items:center;gap:5px;transition:transform .1s,box-shadow .1s;}
-.ctrl-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.15);}
-#btn-run{background:var(--run);}#btn-stop{background:var(--stop);}#btn-reset{background:var(--reset);}
-.speed-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:'Fredoka One',cursive;color:#bbb;font-size:.85rem;}
-#speed{accent-color:#FF6B6B;width:70px;cursor:pointer;}
+#btn-add-char {
+  width: 60px; height: 60px; border-radius: 16px;
+  background: #0f3460; border: 2px dashed #5580aa;
+  font-size: 1.6rem; color: #5580aa; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .15s, color .15s, transform .15s; flex-shrink: 0;
+}
+#btn-add-char:hover { border-color: #FFE66D; color: #FFE66D; transform: scale(1.08); }
+
+/* Emoji picker popup */
+#emoji-popup {
+  position: absolute; left: var(--char-panel-w); top: 0;
+  background: #16213e; border: 3px solid #0f3460;
+  border-radius: 0 16px 16px 0; padding: 10px;
+  display: none; flex-wrap: wrap; gap: 5px; width: 230px;
+  z-index: 50; box-shadow: 6px 4px 20px rgba(0,0,0,.5);
+}
+#emoji-popup.open { display: flex; }
+.ep-emoji { font-size: 30px; cursor: pointer; padding: 4px; border-radius: 10px; transition: transform .12s; }
+.ep-emoji:hover { transform: scale(1.3); background: rgba(255,255,255,.08); }
 
 /* Stage */
-#stage-wrap{flex:1;position:relative;background:var(--stage-bg);overflow:hidden;}
-#stage-wrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#b2dfdb 1.2px,transparent 1.2px);background-size:38px 38px;opacity:.35;pointer-events:none;}
-#stage{width:100%;height:100%;position:relative;}
+#stage {
+  flex: 1; position: relative; overflow: hidden;
+  background: #87CEEB;
+  background-image:
+    linear-gradient(to bottom, #87CEEB 0%, #b0e0ff 55%, #90EE90 55%, #5aad5a 100%);
+}
+/* ground line */
+#stage::after {
+  content: ''; position: absolute; bottom: 45%; left: 0; right: 0;
+  height: 0; pointer-events: none;
+}
+/* clouds decoration */
+#stage::before {
+  content: '☁️  ☁️    ☁️';
+  position: absolute; top: 6%; left: 5%;
+  font-size: 1.8rem; opacity: .7; pointer-events: none;
+  letter-spacing: 20px;
+}
 
 /* Sprites */
-.char-sprite{position:absolute;width:72px;height:72px;font-size:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;filter:drop-shadow(2px 4px 5px rgba(0,0,0,.2));transition:left .22s ease,top .22s ease;}
-.char-sprite.selected-sprite::after{content:'';position:absolute;inset:-7px;border:3px dashed rgba(255,255,255,.95);border-radius:50%;animation:dashSpin 2s linear infinite;}
-@keyframes dashSpin{to{transform:rotate(360deg);}}
-.char-sprite.anim-bounce{animation:aBounce .35s ease;}
-@keyframes aBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
-.char-sprite.anim-spin{animation:aSpin .5s ease;}
-@keyframes aSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.char-sprite.anim-shake{animation:aShake .4s ease;}
-@keyframes aShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-.char-sprite.anim-grow{animation:aGrow .4s ease;}
-@keyframes aGrow{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
-.speech{position:absolute;background:#fff;border:3px solid #FFB347;border-radius:14px;padding:5px 11px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;color:#444;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.12);top:-50px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:30;}
-.speech::after{content:'';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#FFB347;}
-@keyframes collideFlash{0%,100%{filter:drop-shadow(2px 4px 5px rgba(0,0,0,.2));}50%{filter:drop-shadow(0 0 20px #FFE66D) brightness(1.5);}}
-.colliding{animation:collideFlash .35s ease 3;}
+.sprite {
+  position: absolute; width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px; cursor: pointer;
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,.25));
+  transition: left .28s ease, top .28s ease;
+}
+.sprite.active-sprite {
+  filter: drop-shadow(2px 4px 6px rgba(0,0,0,.25)) drop-shadow(0 0 10px #FFE66D);
+}
+.sprite.active-sprite::after {
+  content: ''; position: absolute; inset: -8px;
+  border: 3px dashed #FFE66D; border-radius: 50%;
+  animation: selRing 2s linear infinite;
+}
+@keyframes selRing { to { transform: rotate(360deg); } }
+.sprite.anim-bounce { animation: saBounce .4s ease; }
+@keyframes saBounce { 0%,100%{transform:translateY(0)} 45%{transform:translateY(-24px)} }
+.sprite.anim-spin   { animation: saSpin .5s ease; }
+@keyframes saSpin   { to{transform:rotate(360deg)} }
+.sprite.anim-shake  { animation: saShake .4s ease; }
+@keyframes saShake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+.sprite.anim-grow   { animation: saGrow .4s ease; }
+@keyframes saGrow   { 0%,100%{transform:scale(1)} 50%{transform:scale(1.6)} }
+.sprite.collide-flash { animation: saFlash .5s ease 2; }
+@keyframes saFlash  { 0%,100%{filter:drop-shadow(2px 4px 6px rgba(0,0,0,.25))} 50%{filter:drop-shadow(0 0 22px #FFE66D) brightness(1.6)} }
 
-/* Status */
-#statusbar{padding:5px 14px;font-size:.75rem;font-family:'Nunito',sans-serif;color:#888;background:#fff;border-top:2px solid #eee;min-height:30px;flex-shrink:0;}
+/* Speech bubble */
+.bubble {
+  position: absolute; background: #fff;
+  border: 3px solid #FFB347; border-radius: 14px;
+  padding: 5px 11px; font-family: 'Nunito', sans-serif; font-weight: 900;
+  font-size: .75rem; color: #333; white-space: nowrap;
+  pointer-events: none; z-index: 20;
+  top: -52px; left: 50%; transform: translateX(-50%);
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.bubble::after {
+  content: ''; position: absolute; bottom: -10px; left: 50%;
+  transform: translateX(-50%); border: 5px solid transparent;
+  border-top-color: #FFB347;
+}
 
-/* RIGHT PANEL */
-#right-panel{background:var(--panel-r);border-left:3px solid #BBDEFB;display:flex;flex-direction:column;overflow:hidden;}
-#char-tabs{background:#E3F2FD;border-bottom:3px solid #BBDEFB;display:flex;align-items:center;padding:6px 8px;gap:5px;overflow-x:auto;flex-shrink:0;flex-wrap:wrap;}
-.char-tab{font-size:28px;border-radius:12px;cursor:pointer;padding:4px 8px;border:3px solid transparent;transition:border-color .15s,transform .15s;position:relative;flex-shrink:0;}
-.char-tab:hover{transform:scale(1.15);}
-.char-tab.active-tab{border-color:#2196F3;background:rgba(33,150,243,.12);}
-.tab-del{position:absolute;top:-4px;right:-4px;background:#FF6B6B;color:#fff;border:none;width:16px;height:16px;border-radius:50%;font-size:.6rem;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
-.char-tab:hover .tab-del{display:flex;}
-.btn-add-char{font-family:'Fredoka One',cursive;font-size:.85rem;background:var(--add);color:#fff;border:none;border-radius:30px;padding:5px 14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);flex-shrink:0;white-space:nowrap;}
-.btn-add-char:active{transform:translateY(2px);}
-#add-char-area{background:#fff;border-bottom:2px solid #BBDEFB;padding:8px 10px;display:none;flex-direction:column;gap:6px;flex-shrink:0;}
-#add-char-area.open{display:flex;}
-#add-char-area p{font-family:'Fredoka One',cursive;font-size:.8rem;color:#90CAF9;}
-.emoji-grid{display:flex;flex-wrap:wrap;gap:4px;}
-.emoji-pick{font-size:28px;cursor:pointer;padding:3px;border-radius:10px;transition:transform .12s;}
-.emoji-pick:hover{transform:scale(1.25);background:rgba(33,150,243,.1);}
+/* Collision stars */
+.star-burst {
+  position: absolute; pointer-events: none; z-index: 40;
+  font-size: 1.4rem; transition: all .6s ease; opacity: 1;
+}
 
-/* Sequence */
-#seq-header{padding:10px 14px 4px;font-family:'Fredoka One',cursive;font-size:1rem;color:#64B5F6;border-bottom:2px solid #BBDEFB;display:flex;align-items:center;gap:6px;flex-shrink:0;}
-#seq-char-emoji{font-size:1.4rem;}
-.btn-clear-seq{margin-left:auto;background:#FFB347;color:#fff;border:none;border-radius:20px;font-family:'Fredoka One',cursive;font-size:.75rem;padding:3px 10px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.1);}
-#sequence{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;}
-#sequence.drag-over{background:rgba(100,181,246,.1);border-radius:10px;}
-.seq-empty{text-align:center;color:#ccc;font-family:'Fredoka One',cursive;font-size:.9rem;margin-top:18px;}
-.seq-block{border-radius:12px;padding:9px 12px;font-family:'Fredoka One',cursive;font-size:.85rem;color:#fff;display:flex;align-items:center;gap:7px;box-shadow:0 3px 0 rgba(0,0,0,.14);animation:popIn .18s cubic-bezier(.36,.07,.19,.97);}
-@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
-.seq-block.step-active{outline:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 5px rgba(255,255,255,.4),0 3px 0 rgba(0,0,0,.14);}
-.step-num{background:rgba(0,0,0,.15);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;}
-.del-btn{margin-left:auto;background:rgba(0,0,0,.15);border:none;color:#fff;font-size:.85rem;border-radius:50%;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.del-btn:hover{background:rgba(0,0,0,.32);}
+/* ══════════════════════════════════════════════
+   BOTTOM SECTION
+══════════════════════════════════════════════ */
+#bottom {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: var(--bottom-h);
+  background: #16213e;
+  border-top: 4px solid #0f3460;
+  display: flex;
+}
 
-/* Collision badge on tab */
-.tab-collide-badge{position:absolute;bottom:-4px;right:-4px;background:#FFE66D;border-radius:50%;width:14px;height:14px;font-size:.6rem;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+/* PALETTE */
+#palette {
+  width: var(--palette-w);
+  background: #1a1a2e;
+  border-right: 3px solid #0f3460;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
 
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-thumb{background:#ddd;border-radius:10px;}
+/* Category tabs */
+#cat-tabs {
+  display: flex; background: #0f1628; border-bottom: 3px solid #0f3460;
+  overflow-x: auto; flex-shrink: 0;
+}
+.cat-tab {
+  flex: 1; min-width: 28px; padding: 6px 4px;
+  border: none; cursor: pointer; font-size: 1.1rem;
+  background: transparent; transition: background .15s;
+  border-bottom: 3px solid transparent;
+}
+.cat-tab.active { border-bottom-color: #FFE66D; }
+.cat-tab[data-cat="trigger"] { border-bottom-color: var(--cat-trigger); }
+.cat-tab[data-cat="trigger"].active { background: rgba(255,204,0,.15); }
+.cat-tab[data-cat="motion"] { border-bottom-color: var(--cat-motion); }
+.cat-tab[data-cat="motion"].active  { background: rgba(92,184,255,.15); }
+.cat-tab[data-cat="look"]   { border-bottom-color: var(--cat-look); }
+.cat-tab[data-cat="look"].active    { background: rgba(155,89,182,.15); }
+.cat-tab[data-cat="sound"]  { border-bottom-color: var(--cat-sound); }
+.cat-tab[data-cat="sound"].active   { background: rgba(46,204,113,.15); }
+.cat-tab[data-cat="control"]{ border-bottom-color: var(--cat-control); }
+.cat-tab[data-cat="control"].active { background: rgba(255,127,80,.15); }
+.cat-tab[data-cat="end"]    { border-bottom-color: var(--cat-end); }
+.cat-tab[data-cat="end"].active     { background: rgba(231,76,60,.15); }
+.cat-tab[data-cat="collide"]{ border-bottom-color: var(--cat-collide); }
+.cat-tab[data-cat="collide"].active { background: rgba(255,105,180,.15); }
+
+/* Block list */
+#block-list {
+  flex: 1; overflow-y: auto; padding: 8px;
+  display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
+}
+.blk {
+  border-radius: 14px; padding: 0;
+  cursor: grab; transition: transform .12s, box-shadow .12s;
+  box-shadow: 0 4px 0 rgba(0,0,0,.35);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px;
+  width: 88px; height: 72px;
+  font-size: .65rem; font-family: 'Nunito', sans-serif; font-weight: 900;
+  color: rgba(255,255,255,.9);
+  border: 2px solid rgba(255,255,255,.15);
+}
+.blk:hover { transform: scale(1.1) translateY(-2px); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
+.blk:active { cursor: grabbing; transform: scale(.97); }
+.blk .blk-icon { font-size: 1.8rem; line-height: 1; }
+.blk .blk-label { text-align: center; line-height: 1.1; padding: 0 4px; }
+
+/* Category colors */
+.blk.trigger { background: radial-gradient(circle at 30% 30%, #FFE066, #FFAA00); color: #5a3a00; }
+.blk.motion  { background: radial-gradient(circle at 30% 30%, #7DD8FF, #2A90D9); }
+.blk.look    { background: radial-gradient(circle at 30% 30%, #C39BF5, #7B2FBE); }
+.blk.sound   { background: radial-gradient(circle at 30% 30%, #5FE891, #1E9E52); }
+.blk.control { background: radial-gradient(circle at 30% 30%, #FFB07A, #E05A20); }
+.blk.end     { background: radial-gradient(circle at 30% 30%, #FF7070, #C0392B); }
+.blk.collide { background: radial-gradient(circle at 30% 30%, #FFB3D9, #E0559A); color: #4a0025; }
+
+/* PROGRAMMING RAIL */
+#prog-area {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  background: #1e1e32;
+}
+#prog-char-header {
+  padding: 6px 14px; background: #0f1628; border-bottom: 3px solid #0f3460;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+#prog-char-emoji { font-size: 1.5rem; }
+#prog-char-label { font-size: .85rem; color: #aaa; font-family: 'Nunito',sans-serif; font-weight: 800; }
+.btn-clear { margin-left: auto; background: #C0392B; color: #fff; border: none; border-radius: 20px; font-family: 'Fredoka One',cursive; font-size: .8rem; padding: 4px 12px; cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.btn-clear:active { transform: translateY(2px); }
+
+/* RAIL */
+#rail {
+  flex: 1; overflow-x: auto; overflow-y: hidden;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 0;
+  position: relative;
+}
+#rail.drag-over { background: rgba(255,230,109,.06); }
+
+/* Drop zone hint */
+#rail-hint {
+  color: #3a3a5a; font-family: 'Nunito',sans-serif; font-weight: 800;
+  font-size: .9rem; white-space: nowrap; margin: auto;
+  pointer-events: none;
+}
+
+/* Rail blocks (connected puzzle pieces) */
+.rblk {
+  height: 78px; min-width: 80px; padding: 0 10px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px;
+  font-size: .62rem; font-family: 'Nunito',sans-serif; font-weight: 900;
+  color: rgba(255,255,255,.95);
+  cursor: default; position: relative; flex-shrink: 0;
+  animation: railPop .18s cubic-bezier(.36,.07,.19,.97);
+  clip-path: polygon(12px 0%, calc(100% - 0px) 0%, 100% 50%, calc(100% - 0px) 100%, 12px 100%, 0% 50%);
+}
+/* first block no left notch */
+.rblk:first-child {
+  clip-path: polygon(0% 0%, calc(100% - 0px) 0%, 100% 50%, calc(100% - 0px) 100%, 0% 100%);
+  border-radius: 10px 0 0 10px;
+}
+/* overlap to connect */
+.rblk + .rblk { margin-left: -10px; }
+@keyframes railPop { from{transform:scale(.5) translateX(-20px);opacity:0} to{transform:scale(1) translateX(0);opacity:1} }
+
+.rblk .rblk-icon { font-size: 1.5rem; line-height: 1; pointer-events: none; }
+.rblk .rblk-label { text-align: center; line-height: 1.1; pointer-events: none; }
+.rblk .rblk-del {
+  position: absolute; top: -7px; right: -2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(0,0,0,.5); color: #fff; border: none;
+  font-size: .6rem; cursor: pointer; display: none;
+  align-items: center; justify-content: center; z-index: 5;
+}
+.rblk:hover .rblk-del { display: flex; }
+.rblk.step-active { filter: brightness(1.5) drop-shadow(0 0 8px rgba(255,255,255,.8)); }
+
+/* Colors for rail blocks */
+.rblk.trigger { background: #FFAA00; color: #5a3a00; }
+.rblk.motion  { background: #2A90D9; }
+.rblk.look    { background: #7B2FBE; }
+.rblk.sound   { background: #1E9E52; }
+.rblk.control { background: #E05A20; }
+.rblk.end     { background: #C0392B; }
+.rblk.collide { background: #E0559A; color: #4a0025; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,.04); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 10px; }
 </style>
 </head>
 <body>
 
-<header>
-  <span class="star">⭐</span>
-  <h1>Codinhotinha</h1>
-  <span class="subtitle">🎭 Vários personagens com colisão!</span>
-</header>
-
-<main>
-
-<!-- PALETTE -->
-<div id="palette">
-  <h2>🧩 Blocos</h2>
-  <div class="cat">🏃 Mover</div>
-  <div class="block move" draggable="true" data-cmd="move-right">➡️ Ir pra frente</div>
-  <div class="block move" draggable="true" data-cmd="move-left">⬅️ Ir pra trás</div>
-  <div class="block move" draggable="true" data-cmd="move-up">⬆️ Subir</div>
-  <div class="block move" draggable="true" data-cmd="move-down">⬇️ Descer</div>
-  <div class="cat">👀 Aparência</div>
-  <div class="block look" draggable="true" data-cmd="grow">🔺 Crescer</div>
-  <div class="block look" draggable="true" data-cmd="shrink">🔻 Encolher</div>
-  <div class="block look" draggable="true" data-cmd="spin">🌀 Girar</div>
-  <div class="block look" draggable="true" data-cmd="bounce">🦘 Saltitar</div>
-  <div class="block look" draggable="true" data-cmd="shake">💥 Tremer</div>
-  <div class="cat">💬 Falar</div>
-  <div class="block say" draggable="true" data-cmd="say-oi">💬 Dizer Oi!</div>
-  <div class="block say" draggable="true" data-cmd="say-eba">🎉 Dizer Eba!</div>
-  <div class="block say" draggable="true" data-cmd="say-tchau">👋 Dizer Tchau!</div>
-  <div class="block say" draggable="true" data-cmd="say-amor">❤️ Dizer Amigo!</div>
-  <div class="cat">🔁 Controle</div>
-  <div class="block ctrl" draggable="true" data-cmd="wait">⏳ Esperar</div>
-  <div class="block ctrl" draggable="true" data-cmd="rep2">🔁 Repetir 2x</div>
-  <div class="block ctrl" draggable="true" data-cmd="rep3">🔁 Repetir 3x</div>
-  <div class="cat">⚡ Ao Colidir</div>
-  <div class="block event" draggable="true" data-cmd="on-collide-bounce">💥→🦘 Colidiu: Saltitar</div>
-  <div class="block event" draggable="true" data-cmd="on-collide-spin">💥→🌀 Colidiu: Girar</div>
-  <div class="block event" draggable="true" data-cmd="on-collide-say">💥→💬 Colidiu: Falar!</div>
-  <div class="block event" draggable="true" data-cmd="on-collide-grow">💥→🔺 Colidiu: Crescer!</div>
+<!-- TOP TOOLBAR -->
+<div id="toolbar">
+  <div id="logo">⭐ Codinhotinha</div>
+  <button class="tbtn" id="btn-run">▶ Executar</button>
+  <button class="tbtn" id="btn-stop">■ Parar</button>
+  <button class="tbtn" id="btn-reset">↺ Resetar</button>
+  <div class="speed-grp">🐢 <input type="range" id="speed" min="1" max="5" value="3"> 🐇</div>
+  <div class="spacer"></div>
+  <div id="char-counter">0 personagens</div>
 </div>
 
-<!-- CENTER -->
-<div id="center">
-  <div id="controls">
-    <button class="ctrl-btn" id="btn-run">▶️ Executar</button>
-    <button class="ctrl-btn" id="btn-stop">⏹ Parar</button>
-    <button class="ctrl-btn" id="btn-reset">🏠 Resetar</button>
-    <div class="speed-wrap">🐢<input type="range" id="speed" min="1" max="5" value="3">🐇</div>
+<!-- STAGE AREA -->
+<div id="stage-area">
+  <!-- Left: character list -->
+  <div id="char-list-panel">
+    <div id="emoji-popup"></div>
+    <div id="btn-add-char" title="Adicionar personagem">＋</div>
   </div>
-  <div id="stage-wrap"><div id="stage"></div></div>
-  <div id="statusbar">💡 Clique em <b>+ Personagem</b> para adicionar personagens ao palco!</div>
+  <!-- Stage -->
+  <div id="stage"></div>
 </div>
 
-<!-- RIGHT PANEL -->
-<div id="right-panel">
-  <div id="char-tabs">
-    <button class="btn-add-char" id="btn-open-add">＋ Personagem</button>
+<!-- BOTTOM -->
+<div id="bottom">
+  <!-- Palette -->
+  <div id="palette">
+    <div id="cat-tabs"></div>
+    <div id="block-list"></div>
   </div>
-  <div id="add-char-area">
-    <p>Escolha um personagem:</p>
-    <div class="emoji-grid" id="emoji-grid"></div>
+  <!-- Programming rail -->
+  <div id="prog-area">
+    <div id="prog-char-header">
+      <span id="prog-char-emoji">—</span>
+      <span id="prog-char-label">Selecione um personagem</span>
+      <button class="btn-clear" id="btn-clear">🗑 Limpar</button>
+    </div>
+    <div id="rail"><span id="rail-hint">⬅ Arraste blocos aqui para programar!</span></div>
   </div>
-  <div id="seq-header">
-    <span id="seq-char-emoji">—</span>
-    <span id="seq-char-name">Selecione um personagem</span>
-    <button class="btn-clear-seq" id="btn-clear-seq">🗑 Limpar</button>
-  </div>
-  <div id="sequence"><div class="seq-empty">Adicione um personagem primeiro!</div></div>
 </div>
-
-</main>
 
 <script>
-// ═══════════════════════════════
-// BLOCK METADATA
-// ═══════════════════════════════
-const BLOCKS = {
-  'move-right':        {label:'➡️ Ir pra frente',        color:'#FF6B6B'},
-  'move-left':         {label:'⬅️ Ir pra trás',          color:'#FF6B6B'},
-  'move-up':           {label:'⬆️ Subir',                color:'#FF6B6B'},
-  'move-down':         {label:'⬇️ Descer',               color:'#FF6B6B'},
-  'grow':              {label:'🔺 Crescer',              color:'#4ECDC4'},
-  'shrink':            {label:'🔻 Encolher',             color:'#4ECDC4'},
-  'spin':              {label:'🌀 Girar',                color:'#4ECDC4'},
-  'bounce':            {label:'🦘 Saltitar',             color:'#4ECDC4'},
-  'shake':             {label:'💥 Tremer',               color:'#4ECDC4'},
-  'say-oi':            {label:'💬 Dizer Oi!',            color:'#d4aa00'},
-  'say-eba':           {label:'🎉 Dizer Eba!',           color:'#d4aa00'},
-  'say-tchau':         {label:'👋 Dizer Tchau!',         color:'#d4aa00'},
-  'say-amor':          {label:'❤️ Dizer Amigo!',         color:'#d4aa00'},
-  'wait':              {label:'⏳ Esperar',               color:'#56CF81'},
-  'rep2':              {label:'🔁 Repetir 2x',           color:'#56CF81'},
-  'rep3':              {label:'🔁 Repetir 3x',           color:'#56CF81'},
-  'on-collide-bounce': {label:'💥→🦘 Colidiu: Saltitar', color:'#9B6FE8'},
-  'on-collide-spin':   {label:'💥→🌀 Colidiu: Girar',    color:'#9B6FE8'},
-  'on-collide-say':    {label:'💥→💬 Colidiu: Falar!',   color:'#9B6FE8'},
-  'on-collide-grow':   {label:'💥→🔺 Colidiu: Crescer!', color:'#9B6FE8'},
+/* ═══════════════════════════════════════════
+   BLOCK DATA
+═══════════════════════════════════════════ */
+const CATS = {
+  trigger: { icon:'⚡', label:'Início',   tab:'⚡' },
+  motion:  { icon:'🏃', label:'Mover',    tab:'🏃' },
+  look:    { icon:'👀', label:'Aparência',tab:'👀' },
+  sound:   { icon:'💬', label:'Falar',    tab:'💬' },
+  control: { icon:'🔁', label:'Controle', tab:'🔁' },
+  end:     { icon:'🏁', label:'Fim',      tab:'🏁' },
+  collide: { icon:'💥', label:'Colisão',  tab:'💥' },
 };
+
+const BLOCKS_DEF = [
+  // TRIGGER
+  { id:'on-start',  cat:'trigger', icon:'🟢', label:'Começar',    },
+  { id:'on-tap',    cat:'trigger', icon:'👆', label:'Ao Tocar',   },
+  // MOTION
+  { id:'mv-right',  cat:'motion',  icon:'➡️', label:'Pra frente' },
+  { id:'mv-left',   cat:'motion',  icon:'⬅️', label:'Pra trás'  },
+  { id:'mv-up',     cat:'motion',  icon:'⬆️', label:'Subir'      },
+  { id:'mv-down',   cat:'motion',  icon:'⬇️', label:'Descer'     },
+  { id:'mv-home',   cat:'motion',  icon:'🏠', label:'Início'     },
+  // LOOK
+  { id:'lk-grow',   cat:'look',    icon:'🔺', label:'Crescer'    },
+  { id:'lk-shrink', cat:'look',    icon:'🔻', label:'Encolher'   },
+  { id:'lk-spin',   cat:'look',    icon:'🌀', label:'Girar'      },
+  { id:'lk-bounce', cat:'look',    icon:'🦘', label:'Pular'      },
+  { id:'lk-shake',  cat:'look',    icon:'💥', label:'Tremer'     },
+  { id:'lk-hide',   cat:'look',    icon:'👻', label:'Esconder'   },
+  { id:'lk-show',   cat:'look',    icon:'✨', label:'Aparecer'   },
+  // SOUND (falar)
+  { id:'say-oi',    cat:'sound',   icon:'👋', label:'Oi!'        },
+  { id:'say-eba',   cat:'sound',   icon:'🎉', label:'Eba!'       },
+  { id:'say-tchau', cat:'sound',   icon:'😊', label:'Tchau!'     },
+  { id:'say-amor',  cat:'sound',   icon:'❤️', label:'Amigo!'    },
+  // CONTROL
+  { id:'ct-wait',   cat:'control', icon:'⏳', label:'Esperar'    },
+  { id:'ct-rep2',   cat:'control', icon:'🔁', label:'2 vezes'    },
+  { id:'ct-rep3',   cat:'control', icon:'🔁', label:'3 vezes'    },
+  { id:'ct-rep5',   cat:'control', icon:'🔁', label:'5 vezes'    },
+  // END
+  { id:'en-stop',   cat:'end',     icon:'⏹', label:'Parar'      },
+  { id:'en-happy',  cat:'end',     icon:'🎊', label:'Comemorar'  },
+  // COLLIDE
+  { id:'co-bounce', cat:'collide', icon:'🦘', label:'Pular ao colidir' },
+  { id:'co-spin',   cat:'collide', icon:'🌀', label:'Girar ao colidir' },
+  { id:'co-say',    cat:'collide', icon:'💬', label:'Falar ao colidir' },
+  { id:'co-grow',   cat:'collide', icon:'🔺', label:'Crescer ao colidir'},
+];
 
 const EMOJIS = ['🐱','🐸','🐶','🦊','🐼','🦄','🐉','🚀','🦁','🐯','🐻','🐺',
                 '🦋','🐝','🐙','🦀','🐬','🦖','👾','🤖','🧸','🎃','🐨','🦘'];
 
-// ═══════════════════════════════
-// STATE
-// ═══════════════════════════════
+/* ═══════════════════════════════════════════
+   BUILD PALETTE
+═══════════════════════════════════════════ */
+let activeCat = 'trigger';
+const catTabsEl  = document.getElementById('cat-tabs');
+const blockListEl = document.getElementById('block-list');
+
+Object.keys(CATS).forEach(cat => {
+  const t = document.createElement('button');
+  t.className = 'cat-tab' + (cat === activeCat ? ' active' : '');
+  t.dataset.cat = cat; t.title = CATS[cat].label;
+  t.textContent = CATS[cat].tab;
+  t.addEventListener('click', () => showCat(cat));
+  catTabsEl.appendChild(t);
+});
+
+function showCat(cat) {
+  activeCat = cat;
+  catTabsEl.querySelectorAll('.cat-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+  blockListEl.innerHTML = '';
+  BLOCKS_DEF.filter(b => b.cat === cat).forEach(b => {
+    const d = document.createElement('div');
+    d.className = `blk ${b.cat}`; d.draggable = true; d.dataset.id = b.id;
+    d.innerHTML = `<span class="blk-icon">${b.icon}</span><span class="blk-label">${b.label}</span>`;
+    d.addEventListener('dragstart', e => { dragBlockId = b.id; e.dataTransfer.effectAllowed = 'copy'; });
+    blockListEl.appendChild(d);
+  });
+}
+showCat('trigger');
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
 let characters = [];
-let activeCharId = null;
-let isRunning = false;
-let stopFlag = false;
-let dragCmd = null;
-let collisionInterval = null;
+let activeId = null;
+let isRunning = false, stopFlag = false;
+let dragBlockId = null;
 let collideHandled = new Set();
 let speechTimers = {};
 let charCounter = 0;
 
-const stageEl  = document.getElementById('stage');
-const seqEl    = document.getElementById('sequence');
-const statusEl = document.getElementById('statusbar');
-const speedEl  = document.getElementById('speed');
-const tabsEl   = document.getElementById('char-tabs');
-const addArea  = document.getElementById('add-char-area');
-const seqEmoji = document.getElementById('seq-char-emoji');
-const seqName  = document.getElementById('seq-char-name');
+const stageEl    = document.getElementById('stage');
+const railEl     = document.getElementById('rail');
+const speedEl    = document.getElementById('speed');
+const progEmoji  = document.getElementById('prog-char-emoji');
+const progLabel  = document.getElementById('prog-char-label');
+const hintEl     = document.getElementById('rail-hint');
+const counterEl  = document.getElementById('char-counter');
 
-// ═══════════════════════════════
-// EMOJI PICKER BUILD
-// ═══════════════════════════════
-const emojiGrid = document.getElementById('emoji-grid');
+/* ═══════════════════════════════════════════
+   EMOJI PICKER
+═══════════════════════════════════════════ */
+const popupEl = document.getElementById('emoji-popup');
 EMOJIS.forEach(em => {
   const d = document.createElement('div');
-  d.className = 'emoji-pick'; d.textContent = em;
-  d.addEventListener('click', () => { addCharacter(em); addArea.classList.remove('open'); });
-  emojiGrid.appendChild(d);
+  d.className = 'ep-emoji'; d.textContent = em;
+  d.addEventListener('click', () => { addChar(em); popupEl.classList.remove('open'); });
+  popupEl.appendChild(d);
 });
-document.getElementById('btn-open-add').addEventListener('click', () => addArea.classList.toggle('open'));
+document.getElementById('btn-add-char').addEventListener('click', e => {
+  e.stopPropagation(); popupEl.classList.toggle('open');
+});
+document.addEventListener('click', () => popupEl.classList.remove('open'));
 
-// ═══════════════════════════════
-// ADD / REMOVE CHARACTER
-// ═══════════════════════════════
-function addCharacter(emoji) {
+/* ═══════════════════════════════════════════
+   ADD / REMOVE CHARACTER
+═══════════════════════════════════════════ */
+const charPanel = document.getElementById('char-list-panel');
+
+function addChar(emoji) {
   charCounter++;
-  const id = 'ch' + charCounter;
-  const sw = stageEl.offsetWidth  || 500;
-  const sh = stageEl.offsetHeight || 320;
-  const startX = 40 + ((characters.length % 6) * 90);
-  const startY = 60 + (Math.floor(characters.length / 6) * 100);
+  const id = 'c' + charCounter;
+  const sw = stageEl.offsetWidth || 600;
+  const sh = stageEl.offsetHeight || 300;
+  // Spread positions
+  const sx = 60 + ((characters.length % 5) * 110);
+  const sy = sh * 0.4;
 
-  const el = document.createElement('div');
-  el.className = 'char-sprite';
-  el.id = id;
-  el.textContent = emoji;
-  el.style.left = startX + 'px';
-  el.style.top  = startY + 'px';
-  stageEl.appendChild(el);
-  el.addEventListener('click', () => selectChar(id));
+  const sprite = document.createElement('div');
+  sprite.className = 'sprite'; sprite.id = id;
+  sprite.textContent = emoji;
+  sprite.style.left = sx + 'px'; sprite.style.top = sy + 'px';
+  stageEl.appendChild(sprite);
+  sprite.addEventListener('click', () => selectChar(id));
 
-  const char = {id, emoji, x:startX, y:startY, startX, startY, scale:1, el, sequence:[]};
+  const char = { id, emoji, x:sx, y:sy, sx, sy, scale:1, visible:true, sprite, sequence:[] };
   characters.push(char);
 
-  // Tab
-  const tab = document.createElement('div');
-  tab.className = 'char-tab'; tab.id = 'tab-'+id; tab.dataset.id = id;
-  tab.title = emoji + ' (clique para selecionar)';
-  const emojiSpan = document.createElement('span'); emojiSpan.textContent = emoji;
-  tab.appendChild(emojiSpan);
-
-  const delBtn = document.createElement('button');
-  delBtn.className = 'tab-del'; delBtn.textContent = '✕'; delBtn.title = 'Remover';
-  delBtn.addEventListener('click', e => { e.stopPropagation(); removeCharacter(id); });
-  tab.appendChild(delBtn);
-
-  tab.addEventListener('click', () => selectChar(id));
-  tabsEl.insertBefore(tab, document.getElementById('btn-open-add'));
+  // Thumb in panel
+  const thumb = document.createElement('div');
+  thumb.className = 'char-thumb'; thumb.id = 'th-'+id;
+  thumb.title = emoji; thumb.textContent = emoji;
+  const delb = document.createElement('button');
+  delb.className = 'th-del'; delb.textContent = '✕';
+  delb.addEventListener('click', e => { e.stopPropagation(); removeChar(id); });
+  thumb.appendChild(delb);
+  thumb.addEventListener('click', () => selectChar(id));
+  charPanel.insertBefore(thumb, document.getElementById('btn-add-char'));
 
   selectChar(id);
-  status(`${emoji} adicionado! Monte a sequência de movimentos dele.`);
+  updateCounter();
 }
 
-function removeCharacter(id) {
+function removeChar(id) {
   const idx = characters.findIndex(c => c.id === id);
   if (idx < 0) return;
-  characters[idx].el.remove();
-  document.getElementById('tab-'+id)?.remove();
+  characters[idx].sprite.remove();
+  document.getElementById('th-'+id)?.remove();
   characters.splice(idx, 1);
-  if (activeCharId === id) {
-    activeCharId = null;
-    if (characters.length > 0) selectChar(characters[0].id);
-    else { seqEmoji.textContent='—'; seqName.textContent='Selecione um personagem'; renderSeq(); }
+  if (activeId === id) {
+    activeId = null;
+    if (characters.length) selectChar(characters[0].id);
+    else { progEmoji.textContent='—'; progLabel.textContent='Selecione um personagem'; renderRail(); }
   }
+  updateCounter();
 }
 
 function selectChar(id) {
-  activeCharId = id;
-  document.querySelectorAll('.char-tab').forEach(t => t.classList.remove('active-tab'));
-  document.getElementById('tab-'+id)?.classList.add('active-tab');
-  document.querySelectorAll('.char-sprite').forEach(s => s.classList.remove('selected-sprite'));
+  activeId = id;
+  document.querySelectorAll('.char-thumb').forEach(t => t.classList.remove('active'));
+  document.getElementById('th-'+id)?.classList.add('active');
+  document.querySelectorAll('.sprite').forEach(s => s.classList.remove('active-sprite'));
   const ch = getChar(id);
-  if (ch) {
-    ch.el.classList.add('selected-sprite');
-    seqEmoji.textContent = ch.emoji;
-    seqName.textContent  = 'Sequência';
-  }
-  renderSeq();
+  if (ch) { ch.sprite.classList.add('active-sprite'); progEmoji.textContent = ch.emoji; progLabel.textContent = 'Sequência de ' + ch.emoji; }
+  renderRail();
 }
 
 function getChar(id) { return characters.find(c => c.id === id); }
-function activeChar() { return getChar(activeCharId); }
+function activeChar() { return getChar(activeId); }
+function updateCounter() { counterEl.textContent = characters.length + (characters.length === 1 ? ' personagem' : ' personagens'); }
 
-// ═══════════════════════════════
-// DRAG → SEQUENCE
-// ═══════════════════════════════
-document.querySelectorAll('.block[draggable]').forEach(b => {
-  b.addEventListener('dragstart', e => {
-    dragCmd = b.dataset.cmd;
-    e.dataTransfer.effectAllowed = 'copy';
-  });
+/* ═══════════════════════════════════════════
+   DRAG → RAIL
+═══════════════════════════════════════════ */
+railEl.addEventListener('dragover', e => { e.preventDefault(); railEl.classList.add('drag-over'); });
+railEl.addEventListener('dragleave', () => railEl.classList.remove('drag-over'));
+railEl.addEventListener('drop', e => {
+  e.preventDefault(); railEl.classList.remove('drag-over');
+  if (dragBlockId && activeId) pushBlock(activeId, dragBlockId);
+  dragBlockId = null;
 });
 
-seqEl.addEventListener('dragover', e => { e.preventDefault(); seqEl.classList.add('drag-over'); });
-seqEl.addEventListener('dragleave', () => seqEl.classList.remove('drag-over'));
-seqEl.addEventListener('drop', e => {
-  e.preventDefault(); seqEl.classList.remove('drag-over');
-  if (dragCmd && activeCharId) { pushBlock(activeCharId, dragCmd); dragCmd = null; }
-});
-
-function pushBlock(charId, cmd) {
+function pushBlock(charId, blockId) {
   const ch = getChar(charId);
-  if (!ch) return;
-  ch.sequence.push({cmd, ...BLOCKS[cmd]});
-  renderSeq();
+  const bd = BLOCKS_DEF.find(b => b.id === blockId);
+  if (!ch || !bd) return;
+  ch.sequence.push({ id: blockId, cat: bd.cat, icon: bd.icon, label: bd.label });
+  renderRail();
 }
 
-// ═══════════════════════════════
-// RENDER SEQUENCE PANEL
-// ═══════════════════════════════
-function renderSeq() {
-  seqEl.innerHTML = '';
+/* ═══════════════════════════════════════════
+   RENDER RAIL
+═══════════════════════════════════════════ */
+function renderRail() {
+  railEl.innerHTML = '';
   const ch = activeChar();
-  if (!ch) { seqEl.innerHTML = '<div class="seq-empty">Adicione um personagem primeiro!</div>'; return; }
-  if (ch.sequence.length === 0) { seqEl.innerHTML = '<div class="seq-empty">⬅️ Arraste blocos aqui!</div>'; return; }
-
+  if (!ch || ch.sequence.length === 0) {
+    railEl.innerHTML = '<span id="rail-hint">⬅ Arraste blocos aqui para programar!</span>';
+    return;
+  }
   ch.sequence.forEach((item, i) => {
-    const div = document.createElement('div');
-    div.className = 'seq-block'; div.style.background = item.color;
-    div.innerHTML = `<span class="step-num">${i+1}</span>${item.label}<button class="del-btn" data-i="${i}">✕</button>`;
-    seqEl.appendChild(div);
+    const d = document.createElement('div');
+    d.className = `rblk ${item.cat}`;
+    d.innerHTML = `<span class="rblk-icon">${item.icon}</span><span class="rblk-label">${item.label}</span><button class="rblk-del" data-i="${i}">✕</button>`;
+    railEl.appendChild(d);
   });
-  seqEl.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
+  railEl.querySelectorAll('.rblk-del').forEach(b => {
+    b.addEventListener('click', e => {
       e.stopPropagation();
-      ch.sequence.splice(parseInt(btn.dataset.i), 1);
-      renderSeq();
+      const ch = activeChar();
+      if (ch) { ch.sequence.splice(parseInt(b.dataset.i), 1); renderRail(); }
     });
   });
 }
 
-document.getElementById('btn-clear-seq').addEventListener('click', () => {
-  const ch = activeChar();
-  if (ch) { ch.sequence = []; renderSeq(); }
+document.getElementById('btn-clear').addEventListener('click', () => {
+  const ch = activeChar(); if (ch) { ch.sequence = []; renderRail(); }
 });
 
-// ═══════════════════════════════
-// SPRITE POSITIONING
-// ═══════════════════════════════
-function placeSprite(ch) {
-  const sw = stageEl.offsetWidth, sh = stageEl.offsetHeight;
-  const size = 72;
-  ch.x = Math.max(0, Math.min(sw - size, ch.x));
-  ch.y = Math.max(0, Math.min(sh - size, ch.y));
-  ch.el.style.left = ch.x + 'px';
-  ch.el.style.top  = ch.y + 'px';
-  ch.el.style.fontSize = Math.round(52 * ch.scale) + 'px';
+/* ═══════════════════════════════════════════
+   SPRITE HELPERS
+═══════════════════════════════════════════ */
+function place(ch) {
+  const sw = stageEl.offsetWidth, sh = stageEl.offsetHeight, sz = 80;
+  ch.x = Math.max(0, Math.min(sw-sz, ch.x));
+  ch.y = Math.max(0, Math.min(sh-sz, ch.y));
+  ch.sprite.style.left = ch.x + 'px';
+  ch.sprite.style.top  = ch.y + 'px';
+  ch.sprite.style.fontSize = Math.round(56 * ch.scale) + 'px';
+  ch.sprite.style.visibility = ch.visible ? 'visible' : 'hidden';
 }
-window.addEventListener('resize', () => characters.forEach(placeSprite));
+window.addEventListener('resize', () => characters.forEach(place));
 
-// ═══════════════════════════════
-// ANIMATION HELPERS
-// ═══════════════════════════════
-function animClass(el, cls, dur) {
+function anim(sprite, cls, dur) {
   return new Promise(res => {
-    el.classList.remove(cls);
-    void el.offsetWidth; // reflow
-    el.classList.add(cls);
-    setTimeout(() => { el.classList.remove(cls); res(); }, dur);
+    sprite.classList.remove(cls); void sprite.offsetWidth;
+    sprite.classList.add(cls);
+    setTimeout(() => { sprite.classList.remove(cls); res(); }, dur);
   });
 }
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function showSpeech(ch, text) {
-  ch.el.querySelectorAll('.speech').forEach(s => s.remove());
+function speech(ch, text) {
+  ch.sprite.querySelectorAll('.bubble').forEach(b => b.remove());
   clearTimeout(speechTimers[ch.id]);
-  const sp = document.createElement('div');
-  sp.className = 'speech'; sp.textContent = text;
-  ch.el.appendChild(sp);
-  speechTimers[ch.id] = setTimeout(() => sp.remove(), 2400);
+  const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+  ch.sprite.appendChild(b);
+  speechTimers[ch.id] = setTimeout(() => b.remove(), 2400);
 }
 
-// ═══════════════════════════════
-// COLLISION DETECTION
-// ═══════════════════════════════
-function getHitbox(ch) {
-  const size = 72 * ch.scale;
-  return {x: ch.x + size*0.1, y: ch.y + size*0.1, w: size*0.8, h: size*0.8};
-}
-function overlaps(a, b) {
-  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
-}
-
-function checkCollisions() {
-  for (let i = 0; i < characters.length; i++) {
-    for (let j = i+1; j < characters.length; j++) {
-      const a = characters[i], b = characters[j];
-      const key = a.id + '|' + b.id;
-      if (overlaps(getHitbox(a), getHitbox(b))) {
-        if (!collideHandled.has(key)) {
-          collideHandled.add(key);
-          triggerCollision(a, b);
-        }
-      } else {
-        collideHandled.delete(key);
-      }
-    }
-  }
-}
-
-async function triggerCollision(a, b) {
-  // Visual flash
-  a.el.classList.add('colliding'); b.el.classList.add('colliding');
-  setTimeout(() => { a.el.classList.remove('colliding'); b.el.classList.remove('colliding'); }, 1050);
-
-  // Stars burst on stage
-  spawnStars(a.x + 36, a.y + 36);
-
-  status(`💥 ${a.emoji} e ${b.emoji} colidiram!`);
-
-  for (const ch of [a, b]) {
-    const action = ch.sequence.find(s => s.cmd && s.cmd.startsWith('on-collide'));
-    if (!action) continue;
-    switch(action.cmd) {
-      case 'on-collide-bounce': await animClass(ch.el, 'anim-bounce', 350); break;
-      case 'on-collide-spin':   await animClass(ch.el, 'anim-spin', 500); break;
-      case 'on-collide-say':    showSpeech(ch, 'Oi amigo! 👋'); break;
-      case 'on-collide-grow':
-        ch.scale = Math.min(ch.scale + 0.3, 3);
-        await animClass(ch.el, 'anim-grow', 400);
-        placeSprite(ch);
-        break;
-    }
-  }
-}
-
-// Star burst effect on collision
-function spawnStars(cx, cy) {
-  const stars = ['✨','⭐','💫','🌟'];
-  for (let i = 0; i < 6; i++) {
-    const star = document.createElement('div');
-    star.textContent = stars[i % stars.length];
-    const angle = (i / 6) * Math.PI * 2;
-    const dist = 40 + Math.random() * 30;
-    star.style.cssText = `position:absolute;font-size:1.2rem;pointer-events:none;z-index:50;
-      left:${cx}px;top:${cy}px;transition:all .6s ease;`;
-    stageEl.appendChild(star);
-    requestAnimationFrame(() => {
-      star.style.left = (cx + Math.cos(angle) * dist) + 'px';
-      star.style.top  = (cy + Math.sin(angle) * dist) + 'px';
-      star.style.opacity = '0';
-    });
-    setTimeout(() => star.remove(), 650);
-  }
-}
-
-// ═══════════════════════════════
-// EXECUTE A COMMAND FOR A CHAR
-// ═══════════════════════════════
-async function execCmd(ch, cmd) {
+/* ═══════════════════════════════════════════
+   EXECUTE COMMAND
+═══════════════════════════════════════════ */
+async function exec(ch, id) {
   const spd = parseInt(speedEl.value);
-  const step = Math.round(140 / spd);
-  const dur  = Math.round(350 / spd);
-
-  switch(cmd) {
-    case 'move-right': ch.x += step; placeSprite(ch); await delay(dur); break;
-    case 'move-left':  ch.x -= step; placeSprite(ch); await delay(dur); break;
-    case 'move-up':    ch.y -= step; placeSprite(ch); await delay(dur); break;
-    case 'move-down':  ch.y += step; placeSprite(ch); await delay(dur); break;
-    case 'grow':   ch.scale = Math.min(ch.scale+.3, 3); await animClass(ch.el,'anim-grow',400); placeSprite(ch); break;
-    case 'shrink': ch.scale = Math.max(ch.scale-.3,.3); await animClass(ch.el,'anim-grow',400); placeSprite(ch); break;
-    case 'spin':   await animClass(ch.el,'anim-spin',500); break;
-    case 'bounce': await animClass(ch.el,'anim-bounce',350); break;
-    case 'shake':  await animClass(ch.el,'anim-shake',400); break;
-    case 'say-oi':    showSpeech(ch,'Oi! 👋'); await delay(1800); break;
-    case 'say-eba':   showSpeech(ch,'Eba! 🎉'); await delay(1800); break;
-    case 'say-tchau': showSpeech(ch,'Tchau! 😊'); await delay(1800); break;
-    case 'say-amor':  showSpeech(ch,'Amigo! ❤️'); await delay(1800); break;
-    case 'wait': await delay(Math.round(700/spd)); break;
-    // collide events are reactive — skip in main loop
-    case 'on-collide-bounce': case 'on-collide-spin': case 'on-collide-say': case 'on-collide-grow': break;
-    case 'rep2': return 'rep2';
-    case 'rep3': return 'rep3';
+  const step = Math.round(130/spd), dur = Math.round(320/spd);
+  switch(id) {
+    // TRIGGER - noop in run loop
+    case 'on-start': case 'on-tap': break;
+    // MOTION
+    case 'mv-right': ch.x += step; place(ch); await wait(dur); break;
+    case 'mv-left':  ch.x -= step; place(ch); await wait(dur); break;
+    case 'mv-up':    ch.y -= step; place(ch); await wait(dur); break;
+    case 'mv-down':  ch.y += step; place(ch); await wait(dur); break;
+    case 'mv-home':  ch.x=ch.sx; ch.y=ch.sy; place(ch); await wait(dur); break;
+    // LOOK
+    case 'lk-grow':   ch.scale=Math.min(ch.scale+.3,3); await anim(ch.sprite,'anim-grow',400); place(ch); break;
+    case 'lk-shrink': ch.scale=Math.max(ch.scale-.3,.3); await anim(ch.sprite,'anim-grow',400); place(ch); break;
+    case 'lk-spin':   await anim(ch.sprite,'anim-spin',500); break;
+    case 'lk-bounce': await anim(ch.sprite,'anim-bounce',400); break;
+    case 'lk-shake':  await anim(ch.sprite,'anim-shake',400); break;
+    case 'lk-hide':   ch.visible=false; place(ch); await wait(200); break;
+    case 'lk-show':   ch.visible=true;  place(ch); await wait(200); break;
+    // SOUND
+    case 'say-oi':    speech(ch,'Oi! 👋'); await wait(1800); break;
+    case 'say-eba':   speech(ch,'Eba! 🎉'); await wait(1800); break;
+    case 'say-tchau': speech(ch,'Tchau! 😊'); await wait(1800); break;
+    case 'say-amor':  speech(ch,'Amigo! ❤️'); await wait(1800); break;
+    // CONTROL
+    case 'ct-wait': await wait(Math.round(700/spd)); break;
+    case 'ct-rep2': return {repeat:2};
+    case 'ct-rep3': return {repeat:3};
+    case 'ct-rep5': return {repeat:5};
+    // END
+    case 'en-stop': return {stop:true};
+    case 'en-happy': speech(ch,'🎊 Yay!'); await anim(ch.sprite,'anim-bounce',400); break;
+    // COLLIDE (reactive, handled separately)
+    case 'co-bounce': case 'co-spin': case 'co-say': case 'co-grow': break;
   }
   return null;
 }
 
-// ═══════════════════════════════
-// RUN ONE CHARACTER'S SEQUENCE
-// ═══════════════════════════════
-async function runChar(ch) {
-  // Expand repeat commands
-  const expanded = [];
-  for (const item of ch.sequence) {
-    if (item.cmd === 'rep2') {
-      if (expanded.length > 0) expanded.push({...expanded[expanded.length-1]});
-    } else if (item.cmd === 'rep3') {
-      if (expanded.length > 0) {
-        expanded.push({...expanded[expanded.length-1]});
-        expanded.push({...expanded[expanded.length-2]});
-      }
-    } else {
-      expanded.push(item);
-    }
-  }
-
-  const isActive = ch.id === activeCharId;
-  const seqBlocks = isActive ? seqEl.querySelectorAll('.seq-block') : [];
-
-  for (let i = 0; i < ch.sequence.length; i++) {
-    if (stopFlag) break;
-    if (isActive) {
-      seqBlocks.forEach(b => b.classList.remove('step-active'));
-      seqBlocks[i]?.classList.add('step-active');
-    }
-    await execCmd(ch, ch.sequence[i].cmd);
-  }
-
-  if (isActive) seqBlocks.forEach(b => b.classList.remove('step-active'));
+/* ═══════════════════════════════════════════
+   COLLISION
+═══════════════════════════════════════════ */
+function hitbox(ch) {
+  const s = 80 * ch.scale;
+  return {x:ch.x+s*.1, y:ch.y+s*.1, w:s*.8, h:s*.8};
+}
+function overlaps(a, b) {
+  return a.x<b.x+b.w && a.x+a.w>b.x && a.y<b.y+b.h && a.y+a.h>b.y;
 }
 
-// ═══════════════════════════════
-// CONTROLS
-// ═══════════════════════════════
+function checkCollisions() {
+  for (let i=0;i<characters.length;i++) {
+    for (let j=i+1;j<characters.length;j++) {
+      const a=characters[i], b=characters[j];
+      if (!a.visible || !b.visible) continue;
+      const key = a.id+'|'+b.id;
+      if (overlaps(hitbox(a),hitbox(b))) {
+        if (!collideHandled.has(key)) { collideHandled.add(key); onCollide(a,b); }
+      } else { collideHandled.delete(key); }
+    }
+  }
+}
+
+async function onCollide(a, b) {
+  a.sprite.classList.add('collide-flash'); b.sprite.classList.add('collide-flash');
+  setTimeout(()=>{ a.sprite.classList.remove('collide-flash'); b.sprite.classList.remove('collide-flash'); }, 1000);
+  // burst stars
+  const mx = (a.x+b.x)/2+40, my = (a.y+b.y)/2+40;
+  ['✨','⭐','💥','🌟','⚡'].forEach((s,i)=>{
+    const el=document.createElement('div'); el.className='star-burst'; el.textContent=s;
+    const ang=(i/5)*Math.PI*2, dist=50+Math.random()*30;
+    el.style.left=mx+'px'; el.style.top=my+'px'; stageEl.appendChild(el);
+    requestAnimationFrame(()=>{ el.style.left=(mx+Math.cos(ang)*dist)+'px'; el.style.top=(my+Math.sin(ang)*dist)+'px'; el.style.opacity='0'; });
+    setTimeout(()=>el.remove(),650);
+  });
+  for (const ch of [a,b]) {
+    const act = ch.sequence.find(s=>s.id.startsWith('co-'));
+    if (!act) continue;
+    if (act.id==='co-bounce') await anim(ch.sprite,'anim-bounce',400);
+    if (act.id==='co-spin')   await anim(ch.sprite,'anim-spin',500);
+    if (act.id==='co-say')    speech(ch,'Oi! 👋');
+    if (act.id==='co-grow')   { ch.scale=Math.min(ch.scale+.3,3); await anim(ch.sprite,'anim-grow',400); place(ch); }
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RUN CHARACTER
+═══════════════════════════════════════════ */
+async function runChar(ch) {
+  const isActive = ch.id === activeId;
+  const railBlocks = isActive ? railEl.querySelectorAll('.rblk') : [];
+
+  // Expand repeats
+  const expanded = [];
+  for (const item of ch.sequence) {
+    if (['ct-rep2','ct-rep3','ct-rep5'].includes(item.id)) {
+      const times = item.id==='ct-rep2'?1:item.id==='ct-rep3'?2:4;
+      if (expanded.length>0) for(let t=0;t<times;t++) expanded.push({...expanded[expanded.length-1]});
+    } else { expanded.push(item); }
+  }
+
+  for (let i=0; i<ch.sequence.length; i++) {
+    if (stopFlag) break;
+    if (isActive) { railBlocks.forEach(b=>b.classList.remove('step-active')); railBlocks[i]?.classList.add('step-active'); }
+    const res = await exec(ch, ch.sequence[i].id);
+    if (res?.stop || stopFlag) break;
+  }
+  if (isActive) railBlocks.forEach(b=>b.classList.remove('step-active'));
+}
+
+/* ═══════════════════════════════════════════
+   CONTROLS
+═══════════════════════════════════════════ */
+let colInterval = null;
 document.getElementById('btn-run').addEventListener('click', async () => {
   if (isRunning) return;
-  if (characters.length === 0) { status('Adicione personagens primeiro! 🐱'); return; }
-  const anyBlocks = characters.some(c => c.sequence.some(s => !s.cmd.startsWith('on-collide')));
-  if (!anyBlocks) { status('Monte a sequência de pelo menos um personagem! 😊'); return; }
-
-  isRunning = true; stopFlag = false;
-  status('🚀 Executando todos os personagens ao mesmo tempo!');
-
+  if (!characters.length) return;
+  isRunning=true; stopFlag=false;
   collideHandled.clear();
-  collisionInterval = setInterval(checkCollisions, 60);
-
-  await Promise.all(characters.map(ch => runChar(ch)));
-
-  clearInterval(collisionInterval); collisionInterval = null;
-  isRunning = false;
-  status(stopFlag ? '⏹ Parado!' : '✅ Fim! Você é uma programadora/um programador incrível! 🎉');
+  colInterval = setInterval(checkCollisions, 60);
+  await Promise.all(characters.map(ch=>runChar(ch)));
+  clearInterval(colInterval); colInterval=null;
+  isRunning=false;
 });
-
-document.getElementById('btn-stop').addEventListener('click', () => {
-  stopFlag = true;
-  clearInterval(collisionInterval); collisionInterval = null;
-});
-
-document.getElementById('btn-reset').addEventListener('click', () => {
-  stopFlag = true;
-  clearInterval(collisionInterval); collisionInterval = null;
-  characters.forEach(ch => {
-    ch.x = ch.startX; ch.y = ch.startY; ch.scale = 1;
-    placeSprite(ch);
-    ch.el.querySelectorAll('.speech').forEach(s => s.remove());
-    clearTimeout(speechTimers[ch.id]);
-  });
+document.getElementById('btn-stop').addEventListener('click', ()=>{ stopFlag=true; clearInterval(colInterval); colInterval=null; });
+document.getElementById('btn-reset').addEventListener('click', ()=>{
+  stopFlag=true; clearInterval(colInterval); colInterval=null; isRunning=false;
   collideHandled.clear();
-  isRunning = false;
-  stageEl.querySelectorAll('div:not(.char-sprite)').forEach(d => d.remove()); // clear stars
-  status('🏠 Todos os personagens voltaram para o início!');
+  characters.forEach(ch=>{ ch.x=ch.sx; ch.y=ch.sy; ch.scale=1; ch.visible=true; place(ch); ch.sprite.querySelectorAll('.bubble').forEach(b=>b.remove()); });
+  stageEl.querySelectorAll('.star-burst').forEach(e=>e.remove());
 });
 
-// ═══════════════════════════════
-// DRAG CHARACTER ON STAGE (mouse)
-// ═══════════════════════════════
-(function() {
-  let dragging = null, offX = 0, offY = 0;
+/* ═══════════════════════════════════════════
+   DRAG SPRITE ON STAGE
+═══════════════════════════════════════════ */
+(function(){
+  let drag=null, ox=0, oy=0;
   stageEl.addEventListener('mousedown', e => {
-    const sp = e.target.closest('.char-sprite');
-    if (!sp) return;
-    const ch = characters.find(c => c.el === sp);
-    if (!ch) return;
-    dragging = ch;
-    const rect = stageEl.getBoundingClientRect();
-    offX = e.clientX - rect.left - ch.x;
-    offY = e.clientY - rect.top  - ch.y;
-    selectChar(ch.id);
-    e.preventDefault();
+    const sp = e.target.closest('.sprite'); if(!sp) return;
+    const ch = characters.find(c=>c.sprite===sp); if(!ch) return;
+    drag=ch; const r=stageEl.getBoundingClientRect(); ox=e.clientX-r.left-ch.x; oy=e.clientY-r.top-ch.y;
+    selectChar(ch.id); e.preventDefault();
   });
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const rect = stageEl.getBoundingClientRect();
-    dragging.x = e.clientX - rect.left - offX;
-    dragging.y = e.clientY - rect.top  - offY;
-    dragging.startX = dragging.x; dragging.startY = dragging.y;
-    placeSprite(dragging);
+  document.addEventListener('mousemove', e=>{
+    if(!drag) return;
+    const r=stageEl.getBoundingClientRect(); drag.x=e.clientX-r.left-ox; drag.y=e.clientY-r.top-oy;
+    drag.sx=drag.x; drag.sy=drag.y; place(drag);
   });
-  document.addEventListener('mouseup', () => { dragging = null; });
+  document.addEventListener('mouseup',()=>drag=null);
 })();
 
-// ═══════════════════════════════
-// TOUCH DRAG FROM PALETTE
-// ═══════════════════════════════
-let touchCmd = null, ghostEl = null;
-document.querySelectorAll('.block[draggable]').forEach(b => {
-  b.addEventListener('touchstart', e => {
-    touchCmd = b.dataset.cmd;
-    ghostEl = b.cloneNode(true);
-    ghostEl.style.cssText = 'position:fixed;opacity:.8;pointer-events:none;z-index:999;width:170px;border-radius:12px;';
-    document.body.appendChild(ghostEl);
-  }, {passive:true});
-});
-document.addEventListener('touchmove', e => {
-  if (!ghostEl) return;
-  const t = e.touches[0];
-  ghostEl.style.left = (t.clientX-85)+'px'; ghostEl.style.top = (t.clientY-22)+'px';
+/* ═══════════════════════════════════════════
+   TOUCH DRAG FROM PALETTE
+═══════════════════════════════════════════ */
+let tCmd=null, ghostEl=null;
+blockListEl.addEventListener('touchstart', e=>{
+  const blk=e.target.closest('.blk'); if(!blk) return;
+  tCmd=blk.dataset.id;
+  ghostEl=blk.cloneNode(true); ghostEl.style.cssText='position:fixed;opacity:.85;pointer-events:none;z-index:999;width:80px;height:70px;border-radius:14px;';
+  document.body.appendChild(ghostEl);
 },{passive:true});
-document.addEventListener('touchend', e => {
-  if (!ghostEl || !touchCmd) return;
-  ghostEl.remove(); ghostEl = null;
-  const t = e.changedTouches[0];
-  const el = document.elementFromPoint(t.clientX, t.clientY);
-  if (el && (el === seqEl || seqEl.contains(el))) pushBlock(activeCharId, touchCmd);
-  touchCmd = null;
+document.addEventListener('touchmove', e=>{
+  if(!ghostEl) return; const t=e.touches[0];
+  ghostEl.style.left=(t.clientX-40)+'px'; ghostEl.style.top=(t.clientY-35)+'px';
 },{passive:true});
-
-// ═══════════════════════════════
-// STATUS
-// ═══════════════════════════════
-function status(msg) { statusEl.innerHTML = msg; }
+document.addEventListener('touchend', e=>{
+  if(!ghostEl||!tCmd) return; ghostEl.remove(); ghostEl=null;
+  const t=e.changedTouches[0]; const el=document.elementFromPoint(t.clientX,t.clientY);
+  if(el&&(el===railEl||railEl.contains(el))) pushBlock(activeId,tCmd);
+  tCmd=null;
+},{passive:true});
 </script>
 </body>
 </html>
