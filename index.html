@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 Codinhotinha – Programação para Crianças</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#FFF9F0; --panel-l:#FFFDE7; --panel-r:#F0F8FF; --stage-bg:#E8F5E9;
+  --move:#FF6B6B; --look:#4ECDC4; --say:#d4aa00; --ctrl:#56CF81; --event:#9B6FE8;
+  --run:#56CF81; --stop:#FF6B6B; --reset:#90CAF9; --add:#FFB347;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* HEADER */
+header{background:linear-gradient(135deg,#FF6B6B,#FF8B94 45%,#FFE66D);padding:8px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 3px 12px rgba(0,0,0,.15);flex-shrink:0;}
+header h1{font-family:'Fredoka One',cursive;font-size:1.8rem;color:#fff;text-shadow:2px 3px 0 rgba(0,0,0,.15);}
+.star{font-size:1.8rem;animation:spinStar 4s linear infinite;}
+@keyframes spinStar{to{transform:rotate(360deg);}}
+.subtitle{margin-left:auto;color:#fff;font-size:.85rem;font-weight:800;background:rgba(255,255,255,.25);border-radius:30px;padding:4px 14px;}
+
+/* LAYOUT */
+main{display:grid;grid-template-columns:200px 1fr 270px;flex:1;overflow:hidden;}
+
+/* PALETTE */
+#palette{background:var(--panel-l);border-right:3px solid #FFE0B2;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:5px;}
+#palette h2{font-family:'Fredoka One',cursive;font-size:.9rem;color:#bbb;text-align:center;margin-bottom:4px;}
+.cat{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#ccc;margin-top:8px;padding-left:4px;}
+.block{border-radius:12px;padding:8px 11px;font-family:'Fredoka One',cursive;font-size:.88rem;color:#fff;cursor:grab;user-select:none;display:flex;align-items:center;gap:7px;box-shadow:0 3px 0 rgba(0,0,0,.18);transition:transform .12s,box-shadow .12s;border:none;width:100%;text-align:left;}
+.block:hover{transform:scale(1.07) rotate(-1.5deg);box-shadow:0 6px 0 rgba(0,0,0,.18);}
+.block:active{cursor:grabbing;}
+.block.move{background:var(--move);}
+.block.look{background:var(--look);}
+.block.say{background:var(--say);}
+.block.ctrl{background:var(--ctrl);}
+.block.event{background:var(--event);}
+
+/* CENTER */
+#center{display:flex;flex-direction:column;background:#fff;}
+#controls{padding:8px 14px;background:#fff;display:flex;align-items:center;gap:8px;border-bottom:3px solid #E8F5E9;flex-shrink:0;}
+.ctrl-btn{font-family:'Fredoka One',cursive;font-size:1rem;padding:7px 16px;border:none;border-radius:50px;cursor:pointer;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.15);display:flex;align-items:center;gap:5px;transition:transform .1s,box-shadow .1s;}
+.ctrl-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.15);}
+#btn-run{background:var(--run);}#btn-stop{background:var(--stop);}#btn-reset{background:var(--reset);}
+.speed-wrap{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:'Fredoka One',cursive;color:#bbb;font-size:.85rem;}
+#speed{accent-color:#FF6B6B;width:70px;cursor:pointer;}
+
+/* Stage */
+#stage-wrap{flex:1;position:relative;background:var(--stage-bg);overflow:hidden;}
+#stage-wrap::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#b2dfdb 1.2px,transparent 1.2px);background-size:38px 38px;opacity:.35;pointer-events:none;}
+#stage{width:100%;height:100%;position:relative;}
+
+/* Sprites */
+.char-sprite{position:absolute;width:72px;height:72px;font-size:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;filter:drop-shadow(2px 4px 5px rgba(0,0,0,.2));transition:left .22s ease,top .22s ease;}
+.char-sprite.selected-sprite::after{content:'';position:absolute;inset:-7px;border:3px dashed rgba(255,255,255,.95);border-radius:50%;animation:dashSpin 2s linear infinite;}
+@keyframes dashSpin{to{transform:rotate(360deg);}}
+.char-sprite.anim-bounce{animation:aBounce .35s ease;}
+@keyframes aBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+.char-sprite.anim-spin{animation:aSpin .5s ease;}
+@keyframes aSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.char-sprite.anim-shake{animation:aShake .4s ease;}
+@keyframes aShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.char-sprite.anim-grow{animation:aGrow .4s ease;}
+@keyframes aGrow{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+.speech{position:absolute;background:#fff;border:3px solid #FFB347;border-radius:14px;padding:5px 11px;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;color:#444;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.12);top:-50px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:30;}
+.speech::after{content:'';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#FFB347;}
+@keyframes collideFlash{0%,100%{filter:drop-shadow(2px 4px 5px rgba(0,0,0,.2));}50%{filter:drop-shadow(0 0 20px #FFE66D) brightness(1.5);}}
+.colliding{animation:collideFlash .35s ease 3;}
+
+/* Status */
+#statusbar{padding:5px 14px;font-size:.75rem;font-family:'Nunito',sans-serif;color:#888;background:#fff;border-top:2px solid #eee;min-height:30px;flex-shrink:0;}
+
+/* RIGHT PANEL */
+#right-panel{background:var(--panel-r);border-left:3px solid #BBDEFB;display:flex;flex-direction:column;overflow:hidden;}
+#char-tabs{background:#E3F2FD;border-bottom:3px solid #BBDEFB;display:flex;align-items:center;padding:6px 8px;gap:5px;overflow-x:auto;flex-shrink:0;flex-wrap:wrap;}
+.char-tab{font-size:28px;border-radius:12px;cursor:pointer;padding:4px 8px;border:3px solid transparent;transition:border-color .15s,transform .15s;position:relative;flex-shrink:0;}
+.char-tab:hover{transform:scale(1.15);}
+.char-tab.active-tab{border-color:#2196F3;background:rgba(33,150,243,.12);}
+.tab-del{position:absolute;top:-4px;right:-4px;background:#FF6B6B;color:#fff;border:none;width:16px;height:16px;border-radius:50%;font-size:.6rem;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
+.char-tab:hover .tab-del{display:flex;}
+.btn-add-char{font-family:'Fredoka One',cursive;font-size:.85rem;background:var(--add);color:#fff;border:none;border-radius:30px;padding:5px 14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);flex-shrink:0;white-space:nowrap;}
+.btn-add-char:active{transform:translateY(2px);}
+#add-char-area{background:#fff;border-bottom:2px solid #BBDEFB;padding:8px 10px;display:none;flex-direction:column;gap:6px;flex-shrink:0;}
+#add-char-area.open{display:flex;}
+#add-char-area p{font-family:'Fredoka One',cursive;font-size:.8rem;color:#90CAF9;}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:4px;}
+.emoji-pick{font-size:28px;cursor:pointer;padding:3px;border-radius:10px;transition:transform .12s;}
+.emoji-pick:hover{transform:scale(1.25);background:rgba(33,150,243,.1);}
+
+/* Sequence */
+#seq-header{padding:10px 14px 4px;font-family:'Fredoka One',cursive;font-size:1rem;color:#64B5F6;border-bottom:2px solid #BBDEFB;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+#seq-char-emoji{font-size:1.4rem;}
+.btn-clear-seq{margin-left:auto;background:#FFB347;color:#fff;border:none;border-radius:20px;font-family:'Fredoka One',cursive;font-size:.75rem;padding:3px 10px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.1);}
+#sequence{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;}
+#sequence.drag-over{background:rgba(100,181,246,.1);border-radius:10px;}
+.seq-empty{text-align:center;color:#ccc;font-family:'Fredoka One',cursive;font-size:.9rem;margin-top:18px;}
+.seq-block{border-radius:12px;padding:9px 12px;font-family:'Fredoka One',cursive;font-size:.85rem;color:#fff;display:flex;align-items:center;gap:7px;box-shadow:0 3px 0 rgba(0,0,0,.14);animation:popIn .18s cubic-bezier(.36,.07,.19,.97);}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.seq-block.step-active{outline:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 5px rgba(255,255,255,.4),0 3px 0 rgba(0,0,0,.14);}
+.step-num{background:rgba(0,0,0,.15);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;}
+.del-btn{margin-left:auto;background:rgba(0,0,0,.15);border:none;color:#fff;font-size:.85rem;border-radius:50%;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.del-btn:hover{background:rgba(0,0,0,.32);}
+
+/* Collision badge on tab */
+.tab-collide-badge{position:absolute;bottom:-4px;right:-4px;background:#FFE66D;border-radius:50%;width:14px;height:14px;font-size:.6rem;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:#ddd;border-radius:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="star">⭐</span>
+  <h1>Codinhotinha</h1>
+  <span class="subtitle">🎭 Vários personagens com colisão!</span>
+</header>
+
+<main>
+
+<!-- PALETTE -->
+<div id="palette">
+  <h2>🧩 Blocos</h2>
+  <div class="cat">🏃 Mover</div>
+  <div class="block move" draggable="true" data-cmd="move-right">➡️ Ir pra frente</div>
+  <div class="block move" draggable="true" data-cmd="move-left">⬅️ Ir pra trás</div>
+  <div class="block move" draggable="true" data-cmd="move-up">⬆️ Subir</div>
+  <div class="block move" draggable="true" data-cmd="move-down">⬇️ Descer</div>
+  <div class="cat">👀 Aparência</div>
+  <div class="block look" draggable="true" data-cmd="grow">🔺 Crescer</div>
+  <div class="block look" draggable="true" data-cmd="shrink">🔻 Encolher</div>
+  <div class="block look" draggable="true" data-cmd="spin">🌀 Girar</div>
+  <div class="block look" draggable="true" data-cmd="bounce">🦘 Saltitar</div>
+  <div class="block look" draggable="true" data-cmd="shake">💥 Tremer</div>
+  <div class="cat">💬 Falar</div>
+  <div class="block say" draggable="true" data-cmd="say-oi">💬 Dizer Oi!</div>
+  <div class="block say" draggable="true" data-cmd="say-eba">🎉 Dizer Eba!</div>
+  <div class="block say" draggable="true" data-cmd="say-tchau">👋 Dizer Tchau!</div>
+  <div class="block say" draggable="true" data-cmd="say-amor">❤️ Dizer Amigo!</div>
+  <div class="cat">🔁 Controle</div>
+  <div class="block ctrl" draggable="true" data-cmd="wait">⏳ Esperar</div>
+  <div class="block ctrl" draggable="true" data-cmd="rep2">🔁 Repetir 2x</div>
+  <div class="block ctrl" draggable="true" data-cmd="rep3">🔁 Repetir 3x</div>
+  <div class="cat">⚡ Ao Colidir</div>
+  <div class="block event" draggable="true" data-cmd="on-collide-bounce">💥→🦘 Colidiu: Saltitar</div>
+  <div class="block event" draggable="true" data-cmd="on-collide-spin">💥→🌀 Colidiu: Girar</div>
+  <div class="block event" draggable="true" data-cmd="on-collide-say">💥→💬 Colidiu: Falar!</div>
+  <div class="block event" draggable="true" data-cmd="on-collide-grow">💥→🔺 Colidiu: Crescer!</div>
+</div>
+
+<!-- CENTER -->
+<div id="center">
+  <div id="controls">
+    <button class="ctrl-btn" id="btn-run">▶️ Executar</button>
+    <button class="ctrl-btn" id="btn-stop">⏹ Parar</button>
+    <button class="ctrl-btn" id="btn-reset">🏠 Resetar</button>
+    <div class="speed-wrap">🐢<input type="range" id="speed" min="1" max="5" value="3">🐇</div>
+  </div>
+  <div id="stage-wrap"><div id="stage"></div></div>
+  <div id="statusbar">💡 Clique em <b>+ Personagem</b> para adicionar personagens ao palco!</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <div id="char-tabs">
+    <button class="btn-add-char" id="btn-open-add">＋ Personagem</button>
+  </div>
+  <div id="add-char-area">
+    <p>Escolha um personagem:</p>
+    <div class="emoji-grid" id="emoji-grid"></div>
+  </div>
+  <div id="seq-header">
+    <span id="seq-char-emoji">—</span>
+    <span id="seq-char-name">Selecione um personagem</span>
+    <button class="btn-clear-seq" id="btn-clear-seq">🗑 Limpar</button>
+  </div>
+  <div id="sequence"><div class="seq-empty">Adicione um personagem primeiro!</div></div>
+</div>
+
+</main>
+
+<script>
+// ═══════════════════════════════
+// BLOCK METADATA
+// ═══════════════════════════════
+const BLOCKS = {
+  'move-right':        {label:'➡️ Ir pra frente',        color:'#FF6B6B'},
+  'move-left':         {label:'⬅️ Ir pra trás',          color:'#FF6B6B'},
+  'move-up':           {label:'⬆️ Subir',                color:'#FF6B6B'},
+  'move-down':         {label:'⬇️ Descer',               color:'#FF6B6B'},
+  'grow':              {label:'🔺 Crescer',              color:'#4ECDC4'},
+  'shrink':            {label:'🔻 Encolher',             color:'#4ECDC4'},
+  'spin':              {label:'🌀 Girar',                color:'#4ECDC4'},
+  'bounce':            {label:'🦘 Saltitar',             color:'#4ECDC4'},
+  'shake':             {label:'💥 Tremer',               color:'#4ECDC4'},
+  'say-oi':            {label:'💬 Dizer Oi!',            color:'#d4aa00'},
+  'say-eba':           {label:'🎉 Dizer Eba!',           color:'#d4aa00'},
+  'say-tchau':         {label:'👋 Dizer Tchau!',         color:'#d4aa00'},
+  'say-amor':          {label:'❤️ Dizer Amigo!',         color:'#d4aa00'},
+  'wait':              {label:'⏳ Esperar',               color:'#56CF81'},
+  'rep2':              {label:'🔁 Repetir 2x',           color:'#56CF81'},
+  'rep3':              {label:'🔁 Repetir 3x',           color:'#56CF81'},
+  'on-collide-bounce': {label:'💥→🦘 Colidiu: Saltitar', color:'#9B6FE8'},
+  'on-collide-spin':   {label:'💥→🌀 Colidiu: Girar',    color:'#9B6FE8'},
+  'on-collide-say':    {label:'💥→💬 Colidiu: Falar!',   color:'#9B6FE8'},
+  'on-collide-grow':   {label:'💥→🔺 Colidiu: Crescer!', color:'#9B6FE8'},
+};
+
+const EMOJIS = ['🐱','🐸','🐶','🦊','🐼','🦄','🐉','🚀','🦁','🐯','🐻','🐺',
+                '🦋','🐝','🐙','🦀','🐬','🦖','👾','🤖','🧸','🎃','🐨','🦘'];
+
+// ═══════════════════════════════
+// STATE
+// ═══════════════════════════════
+let characters = [];
+let activeCharId = null;
+let isRunning = false;
+let stopFlag = false;
+let dragCmd = null;
+let collisionInterval = null;
+let collideHandled = new Set();
+let speechTimers = {};
+let charCounter = 0;
+
+const stageEl  = document.getElementById('stage');
+const seqEl    = document.getElementById('sequence');
+const statusEl = document.getElementById('statusbar');
+const speedEl  = document.getElementById('speed');
+const tabsEl   = document.getElementById('char-tabs');
+const addArea  = document.getElementById('add-char-area');
+const seqEmoji = document.getElementById('seq-char-emoji');
+const seqName  = document.getElementById('seq-char-name');
+
+// ═══════════════════════════════
+// EMOJI PICKER BUILD
+// ═══════════════════════════════
+const emojiGrid = document.getElementById('emoji-grid');
+EMOJIS.forEach(em => {
+  const d = document.createElement('div');
+  d.className = 'emoji-pick'; d.textContent = em;
+  d.addEventListener('click', () => { addCharacter(em); addArea.classList.remove('open'); });
+  emojiGrid.appendChild(d);
+});
+document.getElementById('btn-open-add').addEventListener('click', () => addArea.classList.toggle('open'));
+
+// ═══════════════════════════════
+// ADD / REMOVE CHARACTER
+// ═══════════════════════════════
+function addCharacter(emoji) {
+  charCounter++;
+  const id = 'ch' + charCounter;
+  const sw = stageEl.offsetWidth  || 500;
+  const sh = stageEl.offsetHeight || 320;
+  const startX = 40 + ((characters.length % 6) * 90);
+  const startY = 60 + (Math.floor(characters.length / 6) * 100);
+
+  const el = document.createElement('div');
+  el.className = 'char-sprite';
+  el.id = id;
+  el.textContent = emoji;
+  el.style.left = startX + 'px';
+  el.style.top  = startY + 'px';
+  stageEl.appendChild(el);
+  el.addEventListener('click', () => selectChar(id));
+
+  const char = {id, emoji, x:startX, y:startY, startX, startY, scale:1, el, sequence:[]};
+  characters.push(char);
+
+  // Tab
+  const tab = document.createElement('div');
+  tab.className = 'char-tab'; tab.id = 'tab-'+id; tab.dataset.id = id;
+  tab.title = emoji + ' (clique para selecionar)';
+  const emojiSpan = document.createElement('span'); emojiSpan.textContent = emoji;
+  tab.appendChild(emojiSpan);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'tab-del'; delBtn.textContent = '✕'; delBtn.title = 'Remover';
+  delBtn.addEventListener('click', e => { e.stopPropagation(); removeCharacter(id); });
+  tab.appendChild(delBtn);
+
+  tab.addEventListener('click', () => selectChar(id));
+  tabsEl.insertBefore(tab, document.getElementById('btn-open-add'));
+
+  selectChar(id);
+  status(`${emoji} adicionado! Monte a sequência de movimentos dele.`);
+}
+
+function removeCharacter(id) {
+  const idx = characters.findIndex(c => c.id === id);
+  if (idx < 0) return;
+  characters[idx].el.remove();
+  document.getElementById('tab-'+id)?.remove();
+  characters.splice(idx, 1);
+  if (activeCharId === id) {
+    activeCharId = null;
+    if (characters.length > 0) selectChar(characters[0].id);
+    else { seqEmoji.textContent='—'; seqName.textContent='Selecione um personagem'; renderSeq(); }
+  }
+}
+
+function selectChar(id) {
+  activeCharId = id;
+  document.querySelectorAll('.char-tab').forEach(t => t.classList.remove('active-tab'));
+  document.getElementById('tab-'+id)?.classList.add('active-tab');
+  document.querySelectorAll('.char-sprite').forEach(s => s.classList.remove('selected-sprite'));
+  const ch = getChar(id);
+  if (ch) {
+    ch.el.classList.add('selected-sprite');
+    seqEmoji.textContent = ch.emoji;
+    seqName.textContent  = 'Sequência';
+  }
+  renderSeq();
+}
+
+function getChar(id) { return characters.find(c => c.id === id); }
+function activeChar() { return getChar(activeCharId); }
+
+// ═══════════════════════════════
+// DRAG → SEQUENCE
+// ═══════════════════════════════
+document.querySelectorAll('.block[draggable]').forEach(b => {
+  b.addEventListener('dragstart', e => {
+    dragCmd = b.dataset.cmd;
+    e.dataTransfer.effectAllowed = 'copy';
+  });
+});
+
+seqEl.addEventListener('dragover', e => { e.preventDefault(); seqEl.classList.add('drag-over'); });
+seqEl.addEventListener('dragleave', () => seqEl.classList.remove('drag-over'));
+seqEl.addEventListener('drop', e => {
+  e.preventDefault(); seqEl.classList.remove('drag-over');
+  if (dragCmd && activeCharId) { pushBlock(activeCharId, dragCmd); dragCmd = null; }
+});
+
+function pushBlock(charId, cmd) {
+  const ch = getChar(charId);
+  if (!ch) return;
+  ch.sequence.push({cmd, ...BLOCKS[cmd]});
+  renderSeq();
+}
+
+// ═══════════════════════════════
+// RENDER SEQUENCE PANEL
+// ═══════════════════════════════
+function renderSeq() {
+  seqEl.innerHTML = '';
+  const ch = activeChar();
+  if (!ch) { seqEl.innerHTML = '<div class="seq-empty">Adicione um personagem primeiro!</div>'; return; }
+  if (ch.sequence.length === 0) { seqEl.innerHTML = '<div class="seq-empty">⬅️ Arraste blocos aqui!</div>'; return; }
+
+  ch.sequence.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'seq-block'; div.style.background = item.color;
+    div.innerHTML = `<span class="step-num">${i+1}</span>${item.label}<button class="del-btn" data-i="${i}">✕</button>`;
+    seqEl.appendChild(div);
+  });
+  seqEl.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      ch.sequence.splice(parseInt(btn.dataset.i), 1);
+      renderSeq();
+    });
+  });
+}
+
+document.getElementById('btn-clear-seq').addEventListener('click', () => {
+  const ch = activeChar();
+  if (ch) { ch.sequence = []; renderSeq(); }
+});
+
+// ═══════════════════════════════
+// SPRITE POSITIONING
+// ═══════════════════════════════
+function placeSprite(ch) {
+  const sw = stageEl.offsetWidth, sh = stageEl.offsetHeight;
+  const size = 72;
+  ch.x = Math.max(0, Math.min(sw - size, ch.x));
+  ch.y = Math.max(0, Math.min(sh - size, ch.y));
+  ch.el.style.left = ch.x + 'px';
+  ch.el.style.top  = ch.y + 'px';
+  ch.el.style.fontSize = Math.round(52 * ch.scale) + 'px';
+}
+window.addEventListener('resize', () => characters.forEach(placeSprite));
+
+// ═══════════════════════════════
+// ANIMATION HELPERS
+// ═══════════════════════════════
+function animClass(el, cls, dur) {
+  return new Promise(res => {
+    el.classList.remove(cls);
+    void el.offsetWidth; // reflow
+    el.classList.add(cls);
+    setTimeout(() => { el.classList.remove(cls); res(); }, dur);
+  });
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showSpeech(ch, text) {
+  ch.el.querySelectorAll('.speech').forEach(s => s.remove());
+  clearTimeout(speechTimers[ch.id]);
+  const sp = document.createElement('div');
+  sp.className = 'speech'; sp.textContent = text;
+  ch.el.appendChild(sp);
+  speechTimers[ch.id] = setTimeout(() => sp.remove(), 2400);
+}
+
+// ═══════════════════════════════
+// COLLISION DETECTION
+// ═══════════════════════════════
+function getHitbox(ch) {
+  const size = 72 * ch.scale;
+  return {x: ch.x + size*0.1, y: ch.y + size*0.1, w: size*0.8, h: size*0.8};
+}
+function overlaps(a, b) {
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+
+function checkCollisions() {
+  for (let i = 0; i < characters.length; i++) {
+    for (let j = i+1; j < characters.length; j++) {
+      const a = characters[i], b = characters[j];
+      const key = a.id + '|' + b.id;
+      if (overlaps(getHitbox(a), getHitbox(b))) {
+        if (!collideHandled.has(key)) {
+          collideHandled.add(key);
+          triggerCollision(a, b);
+        }
+      } else {
+        collideHandled.delete(key);
+      }
+    }
+  }
+}
+
+async function triggerCollision(a, b) {
+  // Visual flash
+  a.el.classList.add('colliding'); b.el.classList.add('colliding');
+  setTimeout(() => { a.el.classList.remove('colliding'); b.el.classList.remove('colliding'); }, 1050);
+
+  // Stars burst on stage
+  spawnStars(a.x + 36, a.y + 36);
+
+  status(`💥 ${a.emoji} e ${b.emoji} colidiram!`);
+
+  for (const ch of [a, b]) {
+    const action = ch.sequence.find(s => s.cmd && s.cmd.startsWith('on-collide'));
+    if (!action) continue;
+    switch(action.cmd) {
+      case 'on-collide-bounce': await animClass(ch.el, 'anim-bounce', 350); break;
+      case 'on-collide-spin':   await animClass(ch.el, 'anim-spin', 500); break;
+      case 'on-collide-say':    showSpeech(ch, 'Oi amigo! 👋'); break;
+      case 'on-collide-grow':
+        ch.scale = Math.min(ch.scale + 0.3, 3);
+        await animClass(ch.el, 'anim-grow', 400);
+        placeSprite(ch);
+        break;
+    }
+  }
+}
+
+// Star burst effect on collision
+function spawnStars(cx, cy) {
+  const stars = ['✨','⭐','💫','🌟'];
+  for (let i = 0; i < 6; i++) {
+    const star = document.createElement('div');
+    star.textContent = stars[i % stars.length];
+    const angle = (i / 6) * Math.PI * 2;
+    const dist = 40 + Math.random() * 30;
+    star.style.cssText = `position:absolute;font-size:1.2rem;pointer-events:none;z-index:50;
+      left:${cx}px;top:${cy}px;transition:all .6s ease;`;
+    stageEl.appendChild(star);
+    requestAnimationFrame(() => {
+      star.style.left = (cx + Math.cos(angle) * dist) + 'px';
+      star.style.top  = (cy + Math.sin(angle) * dist) + 'px';
+      star.style.opacity = '0';
+    });
+    setTimeout(() => star.remove(), 650);
+  }
+}
+
+// ═══════════════════════════════
+// EXECUTE A COMMAND FOR A CHAR
+// ═══════════════════════════════
+async function execCmd(ch, cmd) {
+  const spd = parseInt(speedEl.value);
+  const step = Math.round(140 / spd);
+  const dur  = Math.round(350 / spd);
+
+  switch(cmd) {
+    case 'move-right': ch.x += step; placeSprite(ch); await delay(dur); break;
+    case 'move-left':  ch.x -= step; placeSprite(ch); await delay(dur); break;
+    case 'move-up':    ch.y -= step; placeSprite(ch); await delay(dur); break;
+    case 'move-down':  ch.y += step; placeSprite(ch); await delay(dur); break;
+    case 'grow':   ch.scale = Math.min(ch.scale+.3, 3); await animClass(ch.el,'anim-grow',400); placeSprite(ch); break;
+    case 'shrink': ch.scale = Math.max(ch.scale-.3,.3); await animClass(ch.el,'anim-grow',400); placeSprite(ch); break;
+    case 'spin':   await animClass(ch.el,'anim-spin',500); break;
+    case 'bounce': await animClass(ch.el,'anim-bounce',350); break;
+    case 'shake':  await animClass(ch.el,'anim-shake',400); break;
+    case 'say-oi':    showSpeech(ch,'Oi! 👋'); await delay(1800); break;
+    case 'say-eba':   showSpeech(ch,'Eba! 🎉'); await delay(1800); break;
+    case 'say-tchau': showSpeech(ch,'Tchau! 😊'); await delay(1800); break;
+    case 'say-amor':  showSpeech(ch,'Amigo! ❤️'); await delay(1800); break;
+    case 'wait': await delay(Math.round(700/spd)); break;
+    // collide events are reactive — skip in main loop
+    case 'on-collide-bounce': case 'on-collide-spin': case 'on-collide-say': case 'on-collide-grow': break;
+    case 'rep2': return 'rep2';
+    case 'rep3': return 'rep3';
+  }
+  return null;
+}
+
+// ═══════════════════════════════
+// RUN ONE CHARACTER'S SEQUENCE
+// ═══════════════════════════════
+async function runChar(ch) {
+  // Expand repeat commands
+  const expanded = [];
+  for (const item of ch.sequence) {
+    if (item.cmd === 'rep2') {
+      if (expanded.length > 0) expanded.push({...expanded[expanded.length-1]});
+    } else if (item.cmd === 'rep3') {
+      if (expanded.length > 0) {
+        expanded.push({...expanded[expanded.length-1]});
+        expanded.push({...expanded[expanded.length-2]});
+      }
+    } else {
+      expanded.push(item);
+    }
+  }
+
+  const isActive = ch.id === activeCharId;
+  const seqBlocks = isActive ? seqEl.querySelectorAll('.seq-block') : [];
+
+  for (let i = 0; i < ch.sequence.length; i++) {
+    if (stopFlag) break;
+    if (isActive) {
+      seqBlocks.forEach(b => b.classList.remove('step-active'));
+      seqBlocks[i]?.classList.add('step-active');
+    }
+    await execCmd(ch, ch.sequence[i].cmd);
+  }
+
+  if (isActive) seqBlocks.forEach(b => b.classList.remove('step-active'));
+}
+
+// ═══════════════════════════════
+// CONTROLS
+// ═══════════════════════════════
+document.getElementById('btn-run').addEventListener('click', async () => {
+  if (isRunning) return;
+  if (characters.length === 0) { status('Adicione personagens primeiro! 🐱'); return; }
+  const anyBlocks = characters.some(c => c.sequence.some(s => !s.cmd.startsWith('on-collide')));
+  if (!anyBlocks) { status('Monte a sequência de pelo menos um personagem! 😊'); return; }
+
+  isRunning = true; stopFlag = false;
+  status('🚀 Executando todos os personagens ao mesmo tempo!');
+
+  collideHandled.clear();
+  collisionInterval = setInterval(checkCollisions, 60);
+
+  await Promise.all(characters.map(ch => runChar(ch)));
+
+  clearInterval(collisionInterval); collisionInterval = null;
+  isRunning = false;
+  status(stopFlag ? '⏹ Parado!' : '✅ Fim! Você é uma programadora/um programador incrível! 🎉');
+});
+
+document.getElementById('btn-stop').addEventListener('click', () => {
+  stopFlag = true;
+  clearInterval(collisionInterval); collisionInterval = null;
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  stopFlag = true;
+  clearInterval(collisionInterval); collisionInterval = null;
+  characters.forEach(ch => {
+    ch.x = ch.startX; ch.y = ch.startY; ch.scale = 1;
+    placeSprite(ch);
+    ch.el.querySelectorAll('.speech').forEach(s => s.remove());
+    clearTimeout(speechTimers[ch.id]);
+  });
+  collideHandled.clear();
+  isRunning = false;
+  stageEl.querySelectorAll('div:not(.char-sprite)').forEach(d => d.remove()); // clear stars
+  status('🏠 Todos os personagens voltaram para o início!');
+});
+
+// ═══════════════════════════════
+// DRAG CHARACTER ON STAGE (mouse)
+// ═══════════════════════════════
+(function() {
+  let dragging = null, offX = 0, offY = 0;
+  stageEl.addEventListener('mousedown', e => {
+    const sp = e.target.closest('.char-sprite');
+    if (!sp) return;
+    const ch = characters.find(c => c.el === sp);
+    if (!ch) return;
+    dragging = ch;
+    const rect = stageEl.getBoundingClientRect();
+    offX = e.clientX - rect.left - ch.x;
+    offY = e.clientY - rect.top  - ch.y;
+    selectChar(ch.id);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = stageEl.getBoundingClientRect();
+    dragging.x = e.clientX - rect.left - offX;
+    dragging.y = e.clientY - rect.top  - offY;
+    dragging.startX = dragging.x; dragging.startY = dragging.y;
+    placeSprite(dragging);
+  });
+  document.addEventListener('mouseup', () => { dragging = null; });
+})();
+
+// ═══════════════════════════════
+// TOUCH DRAG FROM PALETTE
+// ═══════════════════════════════
+let touchCmd = null, ghostEl = null;
+document.querySelectorAll('.block[draggable]').forEach(b => {
+  b.addEventListener('touchstart', e => {
+    touchCmd = b.dataset.cmd;
+    ghostEl = b.cloneNode(true);
+    ghostEl.style.cssText = 'position:fixed;opacity:.8;pointer-events:none;z-index:999;width:170px;border-radius:12px;';
+    document.body.appendChild(ghostEl);
+  }, {passive:true});
+});
+document.addEventListener('touchmove', e => {
+  if (!ghostEl) return;
+  const t = e.touches[0];
+  ghostEl.style.left = (t.clientX-85)+'px'; ghostEl.style.top = (t.clientY-22)+'px';
+},{passive:true});
+document.addEventListener('touchend', e => {
+  if (!ghostEl || !touchCmd) return;
+  ghostEl.remove(); ghostEl = null;
+  const t = e.changedTouches[0];
+  const el = document.elementFromPoint(t.clientX, t.clientY);
+  if (el && (el === seqEl || seqEl.contains(el))) pushBlock(activeCharId, touchCmd);
+  touchCmd = null;
+},{passive:true});
+
+// ═══════════════════════════════
+// STATUS
+// ═══════════════════════════════
+function status(msg) { statusEl.innerHTML = msg; }
+</script>
+</body>
+</html>
